@@ -17,8 +17,8 @@
 <a class="{{ $page==='inventory'?'active':'' }}" href="{{ route('inventory.index') }}"><span class="ico">▦</span><span>Inventario</span></a>
 <a class="{{ $page==='purchases'?'active':'' }}" href="{{ route('purchases.index') }}"><span class="ico">＋</span><span>Compras</span></a>
 <a class="{{ $page==='billing'?'active':'' }}" href="{{ route('billing.index') }}"><span class="ico">＄</span><span>Facturación</span></a>
-<a class="{{ $page==='inventory_report'?'active':'' }}" href="{{ route('inventory.report') }}"><span class="ico">▧</span><span>Reporte de inventario</span></a></nav><div class="sidebar-foot"><div style="color:#93a2b6">Sesión de trabajo</div><div class="profile"><div class="avatar">AD</div><div>Administrador<small>Acceso completo</small></div></div></div></aside>
-<main class="main"><header class="topbar"><div class="crumb"><span class="mobile-head">TallerLab&nbsp; / &nbsp;</span>Laboratorio&nbsp; / &nbsp;<strong>{{ ['dashboard'=>'Panel principal','reception'=>'Nueva recepción','orders'=>'Órdenes de servicio','order_detail'=>'Detalle de orden','customers'=>'Clientes','inventory'=>'Inventario','inventory_report'=>'Reporte de inventario','purchases'=>'Compras','purchase_form'=>'Documento de compra','billing'=>'Facturación','invoice_form'=>'Factura de venta'][$page] ?? '' }}</strong></div><div class="top-actions"><button class="icon-btn" aria-label="Notificaciones">♧</button><div class="user-mini"><div class="avatar">AD</div><span>Administrador</span></div></div></header><section class="content">
+<a class="{{ $page==='inventory_report'?'active':'' }}" href="{{ route('inventory.report') }}"><span class="ico">▧</span><span>Reporte de inventario</span></a></nav><div class="sidebar-foot"><div style="color:#93a2b6">Sesión de trabajo</div><div class="profile"><div class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</div><div>{{ auth()->user()->name }}<small>{{ auth()->user()->role }}</small></div></div><form method="post" action="{{ route('logout') }}" style="margin-top:12px">@csrf<button type="submit" style="border:0;background:none;color:#c5cfdd;padding:4px 0;cursor:pointer;font:inherit">Cerrar sesión</button></form></div></aside>
+<main class="main"><header class="topbar"><div class="crumb"><span class="mobile-head">TallerLab&nbsp; / &nbsp;</span>Laboratorio&nbsp; / &nbsp;<strong>{{ ['dashboard'=>'Panel principal','reception'=>'Nueva recepción','orders'=>'Órdenes de servicio','order_detail'=>'Detalle de orden','customers'=>'Clientes','inventory'=>'Inventario','inventory_report'=>'Reporte de inventario','purchases'=>'Compras','purchase_form'=>'Documento de compra','billing'=>'Facturación','invoice_form'=>'Factura de venta'][$page] ?? '' }}</strong></div><div class="top-actions"><button class="icon-btn" aria-label="Notificaciones">♧</button><div class="user-mini"><div class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</div><span>{{ auth()->user()->name }}</span></div></div></header><section class="content">
 @if(session('success'))<div class="notice">✓ &nbsp;{{ session('success') }}</div>@endif
 @if($errors->any() && $page!=='order_detail')<div class="notice" style="background:#ffeded;border-color:#f5cccc;color:#b33">{{ $errors->first() }}</div>@endif
 @if($page==='dashboard')
@@ -28,7 +28,7 @@
 <div class="card"><div class="card-head"><div><h2 class="card-title">Actividad del taller</h2><span class="muted">Resumen de órdenes</span></div><span class="stat-icon">◷</span></div><div class="activity"><div class="activity-icon">⊕</div><div><p><b>{{ $stats['today'] }} equipos</b> recibidos hoy</p><small>Recepción de equipos</small></div></div><div class="activity"><div class="activity-icon" style="background:#e5f7f4;color:#169b88">⚙</div><div><p><b>{{ $stats['active'] }} reparaciones</b> en curso</p><small>Seguimiento técnico</small></div></div><div class="activity"><div class="activity-icon" style="background:#fff3e5;color:#df9140">✓</div><div><p><b>{{ $stats['ready'] }} equipos</b> listos para entrega</p><small>Entrega al cliente</small></div></div><div class="section-title">Accesos rápidos</div><a href="{{ route('reception') }}" class="btn btn-light" style="width:100%;justify-content:center">＋ &nbsp; Registrar equipo</a></div></div>
 @elseif($page==='reception')
 <div class="headline"><div><p class="eyebrow">Órdenes de servicio / Nuevo ingreso</p><h1>Recepción de equipo</h1><p class="sub">Registra al cliente, el estado del equipo y sus accesorios.</p></div></div><form action="{{ route('orders.store') }}" method="post" enctype="multipart/form-data">@csrf
-<div class="card"><div class="card-head"><h2 class="card-title">01 &nbsp; Datos del propietario</h2><span class="badge blue">Datos del cliente</span></div><div class="form-grid"><div class="field"><label>Nombres y apellidos *</label><input required name="customer_name" placeholder="Ej. María Fernanda López"></div><div class="field"><label>Cédula o RUC</label><input name="document" placeholder="Número de identificación"></div><div class="field"><label>Teléfono / WhatsApp *</label><input required name="phone" placeholder="+593 99 000 0000"></div><div class="field"><label>Correo electrónico</label><input name="email" type="email" placeholder="correo@ejemplo.com"></div><div class="field full"><label>Dirección</label><input name="address" placeholder="Dirección del propietario"></div><div class="field"><label>Persona que deja el equipo</label><input name="contact_name" placeholder="Si es distinta al propietario"></div><div class="field"><label>Teléfono de quien entrega</label><input name="contact_phone" placeholder="Número de contacto"></div></div></div>
+<div class="card"><div class="card-head"><h2 class="card-title">01 &nbsp; Datos del propietario</h2><span class="badge blue">Primero identifica al cliente</span></div><div class="form-grid"><div class="field full"><label for="customerDocument">Cédula o RUC *</label><div style="display:flex;gap:8px"><input id="customerDocument" name="document" value="{{ old('document') }}" maxlength="40" placeholder="Ingresa la cédula o RUC" required style="flex:1"><button class="btn" id="lookupCustomer" data-lookup-url="{{ route('customers.lookup') }}" type="button">Buscar propietario</button></div><span id="customerLookupStatus" class="muted" aria-live="polite">Consulta el documento para continuar.</span></div></div><div id="ownerFields" hidden style="margin-top:14px"><div class="form-grid"><div class="field"><label>Nombres y apellidos *</label><input required name="customer_name" placeholder="Ej. María Fernanda López"></div><div class="field"><label>Teléfono / WhatsApp *</label><input required name="phone" placeholder="+593 99 000 0000"></div><div class="field"><label>Correo electrónico</label><input name="email" type="email" placeholder="correo@ejemplo.com"></div><div class="field full"><label>Dirección</label><input name="address" placeholder="Dirección del propietario"></div><div class="field"><label>Persona que deja el equipo</label><input name="contact_name" placeholder="Si es distinta al propietario"></div><div class="field"><label>Teléfono de quien entrega</label><input name="contact_phone" placeholder="Número de contacto"></div></div></div></div>
 <div class="card" style="margin-top:14px"><div class="card-head"><h2 class="card-title">02 &nbsp; Información del dispositivo</h2><span class="badge orange">Identificación del equipo</span></div><div class="form-grid"><div class="field"><label>Tipo de equipo *</label><select name="device_type" id="deviceType" required><option value="">Selecciona el tipo</option><option>Teléfono</option><option>Tablet</option><option>Computadora</option><option>Laptop</option><option>Consola</option><option>Otro</option></select></div><div class="field"><label>Marca</label><input name="brand" placeholder="Ej. Apple, Samsung, Dell"></div><div class="field"><label>Modelo</label><input name="model" placeholder="Modelo del equipo"></div><div class="field"><label>Color</label><input name="color" placeholder="Color"></div><div class="field"><label>IMEI 1</label><input name="imei1"></div><div class="field"><label>IMEI 2</label><input name="imei2"></div><div class="field"><label>Número de serie</label><input name="serial"></div><div class="field"><label>Desbloqueo (opcional)</label><input name="unlock_method" placeholder="Patrón, PIN u observación"></div><div class="field"><label>Estado de batería / carga</label><select name="battery_state"><option value="">Selecciona</option><option>Normal</option><option>Baja</option><option>No carga</option><option>Hinchada</option><option>No aplica</option></select></div><div class="field"><label>Fotografías del equipo (máx. 8)</label><input type="file" name="photos[]" accept="image/*" multiple></div><div class="field full"><label class="toggle"><input type="checkbox" name="powered_off" value="1"> El equipo ingresó apagado; añadir la nota de verificación automáticamente.</label></div><div class="field full"><label>Observaciones generales</label><textarea name="observations" placeholder="Daños visibles, rayones, golpes, piezas faltantes u otros detalles..."></textarea></div></div></div>
 <div class="card" style="margin-top:14px"><div class="card-head"><h2 class="card-title">03 &nbsp; Accesorios entregados</h2><span class="muted">Selecciona los incluidos</span></div><div class="access-grid">@foreach(['Cargador','Cable','Caja','Estuche','Memoria externa','Adaptadores','Otros'] as $acc)<label class="access"><input type="checkbox" name="accessories[{{ $acc }}][included]" value="1"> {{ $acc }} <select name="accessories[{{ $acc }}][condition]"><option value="Bueno">Bueno</option><option value="Dañado">Dañado</option><option value="Roto">Roto</option><option value="Incompleto">Incompleto</option><option value="No aplica">No aplica</option></select></label>@endforeach</div></div>
 <div class="card" style="margin-top:14px"><div class="card-head"><h2 class="card-title">04 &nbsp; Checklist de recepción</h2><span class="muted">La verificación queda registrada con usuario y hora</span></div><div class="check-grid" id="checklist"></div></div>
@@ -92,6 +92,60 @@
 const mobile=['Enciende','Cámara trasera','Cámara frontal','Face ID','Huella dactilar','Módem / señal celular','WiFi','Bluetooth','Altavoz','Micrófono','Auricular','Vibrador','Botón de encendido','Botones de volumen','Pantalla táctil','Display','Puerto de carga','Batería','IMEI 1 visible','IMEI 2 visible','Piezas desconocidas / repuestos no originales','SIM 1 reconocida','SIM 2 reconocida','Cuenta Google / iCloud / MDM o bloqueo activo'];
 const computer=['Enciende','Carga','Enciende pero no da video','Teclado','Touchpad','Puertos USB','Puerto de carga','WiFi','Bluetooth','Bocinos','Micrófono','Cámara','Lector de tarjetas','Batería','Disco duro o SSD detectado','Sistema operativo inicia','Pantalla con líneas, manchas o daños','Bisagras dañadas'];
 const selectOpts=['Funciona','No funciona','Presenta fallas','No aplica'];function buildChecklist(){const type=document.getElementById('deviceType').value.toLowerCase();const list=['teléfono','tablet'].includes(type)?mobile:['computadora','laptop'].includes(type)?computer:[];document.getElementById('checklist').innerHTML=list.map((x,i)=>`<label class="check-item"><span>${x}</span><select name="checklist[${x}]"><option value="">Sin verificar</option>${selectOpts.map(v=>`<option>${v}</option>`).join('')}</select></label>`).join('')+`<div class="field full"><label>Observaciones del checklist</label><textarea name="checklist[Observaciones adicionales]" placeholder="Observaciones adicionales..." style="min-height:55px"></textarea></div>`}document.getElementById('deviceType').addEventListener('change',buildChecklist);buildChecklist();
+</script>@endif
+@if($page==='reception')<script>
+const customerDocument = document.getElementById('customerDocument');
+const lookupCustomerButton = document.getElementById('lookupCustomer');
+const ownerFields = document.getElementById('ownerFields');
+const customerLookupStatus = document.getElementById('customerLookupStatus');
+const receptionForm = document.querySelector('form[action="{{ route('orders.store') }}"]');
+let customerLookupComplete = false;
+function setOwnerFieldsEnabled(enabled) {
+    ownerFields.hidden = !enabled;
+    ownerFields.querySelectorAll('input, select, textarea').forEach(function (field) { field.disabled = !enabled; });
+}
+function resetCustomerLookup() {
+    customerLookupComplete = false;
+    setOwnerFieldsEnabled(false);
+    customerLookupStatus.textContent = 'Documento cambiado. Busca al propietario para continuar.';
+}
+async function lookupCustomer() {
+    const documentNumber = customerDocument.value.trim();
+    if (!documentNumber) {
+        customerDocument.focus();
+        customerLookupStatus.textContent = 'Ingresa primero la cédula o el RUC.';
+        return;
+    }
+    lookupCustomerButton.disabled = true;
+    customerLookupStatus.textContent = 'Buscando propietario…';
+    try {
+        const response = await fetch(lookupCustomerButton.dataset.lookupUrl + '?document=' + encodeURIComponent(documentNumber), { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) { throw new Error('lookup_failed'); }
+        const result = await response.json();
+        const fields = ['customer_name', 'phone', 'email', 'address', 'contact_name', 'contact_phone'];
+        fields.forEach(function (name) {
+            const field = receptionForm.elements.namedItem(name);
+            field.value = result.found && name === 'customer_name' ? result.customer.name : (result.found && result.customer[name.replace('customer_', '')] !== undefined ? result.customer[name.replace('customer_', '')] : '');
+        });
+        customerLookupComplete = true;
+        setOwnerFieldsEnabled(true);
+        customerLookupStatus.textContent = result.found ? 'Propietario encontrado. Revisa sus datos y continúa.' : 'No existe un registro con este documento. Completa los datos para crear un propietario nuevo.';
+    } catch (error) {
+        customerLookupStatus.textContent = 'No se pudo consultar el documento. Verifica tu conexión e inténtalo otra vez.';
+    } finally {
+        lookupCustomerButton.disabled = false;
+    }
+}
+lookupCustomerButton.addEventListener('click', lookupCustomer);
+customerDocument.addEventListener('keydown', function (event) { if (event.key === 'Enter') { event.preventDefault(); lookupCustomer(); } });
+customerDocument.addEventListener('input', resetCustomerLookup);
+receptionForm.addEventListener('submit', function (event) {
+    if (!customerLookupComplete) {
+        event.preventDefault();
+        customerLookupStatus.textContent = 'Busca la cédula o RUC antes de guardar la recepción.';
+        customerDocument.focus();
+    }
+});
 </script>@endif
 @if($page==='order_detail')<script>
 document.getElementById('copyPublicStatusUrl').addEventListener('click', async function () {

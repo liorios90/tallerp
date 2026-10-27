@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
@@ -19,12 +20,28 @@ class WorkshopController extends Controller
         return view('workshop', compact('stats','orders'))->with('page', 'dashboard');
     }
     public function reception(): View { return view('workshop', ['page'=>'reception']); }
+    public function findCustomerByDocument(Request $request): JsonResponse
+    {
+        $data = $request->validate(['document' => ['required', 'string', 'max:40']]);
+        $customer = DB::table('customers')
+            ->whereRaw('LOWER(TRIM(document)) = ?', [mb_strtolower(trim($data['document']))])
+            ->select('name', 'document', 'phone', 'email', 'address')
+            ->first();
+
+        return response()->json(['found' => $customer !== null, 'customer' => $customer]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate(['customer_name'=>'required|string|max:160','document'=>'nullable|string|max:40','phone'=>'required|string|max:40','email'=>'nullable|email|max:160','address'=>'nullable|string|max:255','contact_name'=>'nullable|string|max:160','contact_phone'=>'nullable|string|max:40','device_type'=>'required|string|max:60','brand'=>'nullable|string|max:100','model'=>'nullable|string|max:100','color'=>'nullable|string|max:60','imei1'=>'nullable|string|max:40','imei2'=>'nullable|string|max:40','serial'=>'nullable|string|max:100','unlock_method'=>'nullable|string|max:255','battery_state'=>'nullable|string|max:60','powered_off'=>'nullable|boolean','observations'=>'nullable|string|max:5000','requested_work'=>'nullable|string|max:5000','checklist'=>'nullable|array','checklist.*'=>'nullable|string|max:100','accessories'=>'nullable|array','accessories.*.included'=>'nullable|boolean','accessories.*.condition'=>'nullable|string|max:100','photos'=>'nullable|array|max:8','photos.*'=>'image|max:5120']);
+        $data = $request->validate(['customer_name'=>'required|string|max:160','document'=>'required|string|max:40','phone'=>'required|string|max:40','email'=>'nullable|email|max:160','address'=>'nullable|string|max:255','contact_name'=>'nullable|string|max:160','contact_phone'=>'nullable|string|max:40','device_type'=>'required|string|max:60','brand'=>'nullable|string|max:100','model'=>'nullable|string|max:100','color'=>'nullable|string|max:60','imei1'=>'nullable|string|max:40','imei2'=>'nullable|string|max:40','serial'=>'nullable|string|max:100','unlock_method'=>'nullable|string|max:255','battery_state'=>'nullable|string|max:60','powered_off'=>'nullable|boolean','observations'=>'nullable|string|max:5000','requested_work'=>'nullable|string|max:5000','checklist'=>'nullable|array','checklist.*'=>'nullable|string|max:100','accessories'=>'nullable|array','accessories.*.included'=>'nullable|boolean','accessories.*.condition'=>'nullable|string|max:100','photos'=>'nullable|array|max:8','photos.*'=>'image|max:5120']);
         $order = DB::transaction(function () use ($data,$request) {
-            $customer = DB::table('customers')->where('document',$data['document'] ?? null)->when(empty($data['document']), fn($q)=>$q->where('phone',$data['phone']))->first();
-            $customerId = $customer?->id ?? DB::table('customers')->insertGetId(['name'=>$data['customer_name'],'document'=>$data['document'] ?? null,'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'created_at'=>now(),'updated_at'=>now()]);
+            $customer = DB::table('customers')->whereRaw('LOWER(TRIM(document)) = ?', [mb_strtolower(trim($data['document']))])->first();
+            if ($customer) {
+                DB::table('customers')->where('id', $customer->id)->update(['name'=>$data['customer_name'],'document'=>trim($data['document']),'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'updated_at'=>now()]);
+                $customerId = $customer->id;
+            } else {
+                $customerId = DB::table('customers')->insertGetId(['name'=>$data['customer_name'],'document'=>trim($data['document']),'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'created_at'=>now(),'updated_at'=>now()]);
+            }
             $id = DB::table('service_orders')->insertGetId(['number'=>'OT-'.now()->format('ymd').'-'.Str::upper(Str::random(5)),'customer_id'=>$customerId,'received_by'=>auth()->id(),'contact_name'=>$data['contact_name'] ?? null,'contact_phone'=>$data['contact_phone'] ?? null,'device_type'=>$data['device_type'],'brand'=>$data['brand'] ?? null,'model'=>$data['model'] ?? null,'color'=>$data['color'] ?? null,'imei1'=>$data['imei1'] ?? null,'imei2'=>$data['imei2'] ?? null,'serial'=>$data['serial'] ?? null,'unlock_method'=>$data['unlock_method'] ?? null,'battery_state'=>$data['battery_state'] ?? null,'powered_off'=>$request->boolean('powered_off'),'observations'=>trim(($data['observations'] ?? '').($request->boolean('powered_off') ? "\nEquipo ingresó apagado; no fue posible verificar su estado ni funcionamiento al momento de la recepción." : '')),'requested_work'=>$data['requested_work'] ?? null,'status'=>'Recibido','received_at'=>now(),'created_at'=>now(),'updated_at'=>now()]);
             foreach (($data['accessories'] ?? []) as $name=>$accessory) if (!empty($accessory['included'])) DB::table('order_accessories')->insert(['service_order_id'=>$id,'name'=>$name,'condition'=>$accessory['condition'] ?? 'Bueno','created_at'=>now(),'updated_at'=>now()]);
             foreach (($data['checklist'] ?? []) as $item=>$result) if ($result) DB::table('checklist_checks')->insert(['service_order_id'=>$id,'item'=>$item,'result'=>$result,'checked_by'=>auth()->id(),'checked_at'=>now()]);
