@@ -1,0 +1,1 @@
+TallerLab lleva cada reparación desde “Nueva recepción” hasta “Listo para entrega”, con órdenes, inventario y facturación en el mismo flujo.

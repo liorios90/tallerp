@@ -1,0 +1,719 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 6,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "timeline_track_too_dense",
+        "severity": "warning",
+        "message": "Track 0 has 5 timed elements in this HTML file. Smaller sub-compositions keep timelines easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon2\\www\\taller\\brag-output-2026-10-27-000000\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move coherent scene groups into separate .html files under compositions/ and mount them from the parent with data-composition-src so the timeline stays easier to inspect, revise, and validate."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s1\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s1",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon2\\www\\taller\\brag-output-2026-10-27-000000\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s2\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s2",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon2\\www\\taller\\brag-output-2026-10-27-000000\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s2\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s3\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s3",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon2\\www\\taller\\brag-output-2026-10-27-000000\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s3\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s4\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s4",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon2\\www\\taller\\brag-output-2026-10-27-000000\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s4\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<section id=\"s5\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#s5",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon2\\www\\taller\\brag-output-2026-10-27-000000\\composition\\index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <section id=\"s5\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 20,
+    "samples": [
+      0,
+      1.5,
+      4.5,
+      8,
+      13,
+      17
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0,
+      1.5,
+      4.5,
+      8,
+      17
+    ],
+    "checked": 65,
+    "passed": 65
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 63 text elements stay under it for 0.5 s or more, the smallest \"TALLER\" at 13 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "TALLER",
+        "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 331,
+          "y": 279,
+          "width": 59.14,
+          "height": 16
+        },
+        "time": 3.125,
+        "times": [
+          0,
+          0,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.125,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          7.125,
+          12.125,
+          12.125,
+          12.125,
+          12.125,
+          12.125,
+          16.125,
+          16.125,
+          16.125,
+          16.125,
+          16.125,
+          16.125
+        ],
+        "fontPx": 13,
+        "floorPx": 28,
+        "seconds": 3.875,
+        "elements": [
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "TALLER",
+            "fontPx": 13,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(6)",
+            "text": "ADMINISTRACIÓN",
+            "fontPx": 13,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "TALLER",
+            "fontPx": 13,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(6)",
+            "text": "ADMINISTRACIÓN",
+            "fontPx": 13,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#status",
+            "text": "Recibido",
+            "fontPx": 13.5,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "Equipo",
+            "fontPx": 14,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "Estado actual",
+            "fontPx": 14,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Cargo registrado",
+            "fontPx": 14,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(1) > strong:nth-of-type(1)",
+            "text": "Tipo de equipo",
+            "fontPx": 15,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(2) > strong:nth-of-type(1)",
+            "text": "Marca",
+            "fontPx": 15,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(3) > strong:nth-of-type(1)",
+            "text": "Modelo",
+            "fontPx": 15,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(4) > strong:nth-of-type(1)",
+            "text": "Estado",
+            "fontPx": 15,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "Recibido",
+            "fontPx": 15,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > strong:nth-of-type(1)",
+            "text": "Observaciones",
+            "fontPx": 15,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.row > b:nth-of-type(1)",
+            "text": "Tipo",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > b:nth-of-type(2)",
+            "text": "Detalle",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > b:nth-of-type(3)",
+            "text": "Cantidad",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > b:nth-of-type(4)",
+            "text": "Importe",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > span:nth-of-type(1)",
+            "text": "Servicio",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > span:nth-of-type(2)",
+            "text": "Diagnóstico técnico",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > span:nth-of-type(3)",
+            "text": "1",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.row > span:nth-of-type(4)",
+            "text": "$25.00",
+            "fontPx": 15,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#ready",
+            "text": "Listo para entrega",
+            "fontPx": 15,
+            "time": 12.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "Taller / Nueva recepción",
+            "fontPx": 16,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "span.button",
+            "text": "Guardar recepción",
+            "fontPx": 16,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "Taller / Órdenes / Orden de servicio",
+            "fontPx": 16,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s4 > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Recibido → En diagnóstico → En reparación",
+            "fontPx": 16,
+            "time": 12.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(3)",
+            "text": "◫ Panel",
+            "fontPx": 17,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(4)",
+            "text": "＋ Nueva recepción",
+            "fontPx": 17,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(5)",
+            "text": "▤ Órdenes",
+            "fontPx": 17,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(7)",
+            "text": "▦ Inventario",
+            "fontPx": 17,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(8)",
+            "text": "▧ Facturación",
+            "fontPx": 17,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(1)",
+            "text": "Teléfono móvil",
+            "fontPx": 17,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(2)",
+            "text": "Samsung",
+            "fontPx": 17,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "div.formgrid > div:nth-of-type(3)",
+            "text": "Galaxy A54",
+            "fontPx": 17,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3)",
+            "text": "Revisión solicitada",
+            "fontPx": 17,
+            "time": 3.25,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(3)",
+            "text": "◫ Panel",
+            "fontPx": 17,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(4)",
+            "text": "＋ Nueva recepción",
+            "fontPx": 17,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(5)",
+            "text": "▤ Órdenes",
+            "fontPx": 17,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(7)",
+            "text": "▦ Inventario",
+            "fontPx": 17,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(8)",
+            "text": "▧ Facturación",
+            "fontPx": 17,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s1 > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "TallerLab · Gestión técnica",
+            "fontPx": 18,
+            "time": 0,
+            "seconds": 3
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "Operaciones",
+            "fontPx": 18,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "Detalle de orden",
+            "fontPx": 18,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s4 > div:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "Seguimiento de orden de servicio",
+            "fontPx": 18,
+            "time": 12.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s4 > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "Samsung Galaxy A54",
+            "fontPx": 18,
+            "time": 12.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1)",
+            "text": "Datos del equipo",
+            "fontPx": 20,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Trabajos y repuestos",
+            "fontPx": 20,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.logo > small:nth-of-type(1)",
+            "text": "GESTIÓN TÉCNICA",
+            "fontPx": 20,
+            "time": 16.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "div.closeTags > span:nth-of-type(1)",
+            "text": "Órdenes",
+            "fontPx": 20,
+            "time": 16.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "div.closeTags > span:nth-of-type(2)",
+            "text": "Inventario",
+            "fontPx": 20,
+            "time": 16.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "div.closeTags > span:nth-of-type(3)",
+            "text": "Facturación",
+            "fontPx": 20,
+            "time": 16.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "TallerLab",
+            "fontPx": 22,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(1)",
+            "text": "TallerLab",
+            "fontPx": 22,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#statusText",
+            "text": "En diagnóstico",
+            "fontPx": 22,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "#s5 > div:nth-of-type(1) > div:nth-of-type(3)",
+            "text": "Listo para entrega.",
+            "fontPx": 23,
+            "time": 16.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s2 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "T",
+            "fontPx": 24,
+            "time": 3.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s3 > div:nth-of-type(1) > aside:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "T",
+            "fontPx": 24,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "Galaxy A54",
+            "fontPx": 24,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.stats > div:nth-of-type(3) > div:nth-of-type(2)",
+            "text": "Revisión",
+            "fontPx": 24,
+            "time": 7.125,
+            "seconds": 4.875
+          },
+          {
+            "selector": "div.logo > span:nth-of-type(1)",
+            "text": "T",
+            "fontPx": 24,
+            "time": 16.125,
+            "seconds": 3.875
+          },
+          {
+            "selector": "#s1 > div:nth-of-type(1) > div:nth-of-type(2)",
+            "text": "Todo el recorrido del taller, a la vista.",
+            "fontPx": 26,
+            "time": 0,
+            "seconds": 3
+          },
+          {
+            "selector": "#s4 > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(4)",
+            "text": "Estado actual: Listo para entrega",
+            "fontPx": 26,
+            "time": 12.125,
+            "seconds": 3.875
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 160
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}
