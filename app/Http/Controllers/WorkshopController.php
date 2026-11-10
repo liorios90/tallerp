@@ -121,6 +121,14 @@ class WorkshopController extends Controller
                 'service_orders.device_type',
                 'service_orders.brand',
                 'service_orders.model',
+                'service_orders.color',
+                'service_orders.imei1',
+                'service_orders.imei2',
+                'service_orders.serial',
+                'service_orders.unlock_method',
+                'service_orders.battery_state',
+                'service_orders.powered_off',
+                'service_orders.observations',
                 'service_orders.status',
                 'service_orders.received_at',
                 'service_orders.updated_at',
@@ -137,6 +145,7 @@ class WorkshopController extends Controller
 
         abort_unless($order, 404);
 
+        $photos = DB::table('order_photos')->where('service_order_id', $id)->orderBy('id')->get();
         $chargeLines = DB::table('service_order_items')
             ->join('inventory_items', 'inventory_items.id', '=', 'service_order_items.inventory_item_id')
             ->where('service_order_items.service_order_id', $id)
@@ -160,7 +169,7 @@ class WorkshopController extends Controller
         $chargeTotal = $chargeLines->sum(fn ($line): float => $line->quantity * $line->unit_price);
         $invoice = DB::table('invoices')->where('service_order_id', $id)->select('number', 'status', 'total')->first();
 
-        return view('service-order-status', compact('order', 'chargeLines', 'chargeTotal', 'invoice'));
+        return view('service-order-status', compact('order', 'photos', 'chargeLines', 'chargeTotal', 'invoice'));
     }
 
     public function updateOrder(Request $request, int $id): RedirectResponse
