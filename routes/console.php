@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 
 Artisan::command('inspire', function () {
@@ -25,6 +26,21 @@ Artisan::command('workshop:user-create', function (): int {
         return Command::FAILURE;
     }
 
+    $role = (string) $this->choice('Rol', ['sistemas', 'usuario'], 0);
+    $companyId = null;
+
+    if ($role === 'usuario') {
+        $companies = DB::table('companies')->orderBy('first_name')->get();
+        if ($companies->isEmpty()) {
+            $this->error('No hay empresas. Crea primero un usuario de sistemas y registra la empresa desde el sistema.');
+
+            return Command::FAILURE;
+        }
+
+        $labels = $companies->map(fn (object $company): string => $company->id.' · '.$company->first_name.' '.$company->last_name)->all();
+        $companyId = (int) strtok((string) $this->choice('Empresa', $labels), ' ');
+    }
+
     $password = (string) $this->secret('Contraseña (mínimo 12 caracteres)');
     $confirmation = (string) $this->secret('Confirma la contraseña');
 
@@ -34,8 +50,14 @@ Artisan::command('workshop:user-create', function (): int {
         return Command::FAILURE;
     }
 
-    User::query()->create(['name' => $name, 'email' => $email, 'password' => $password]);
-    $this->info('Usuario creado. Ya puede iniciar sesión en el taller.');
+    User::query()->create([
+        'name' => $name,
+        'email' => $email,
+        'password' => $password,
+        'role' => $role,
+        'company_id' => $companyId,
+    ]);
+    $this->info($role === 'sistemas' ? 'Usuario de sistemas creado. Solo puede registrar empresas.' : 'Usuario de empresa creado.');
 
     return Command::SUCCESS;
 })->purpose('Create a user who can sign in to the workshop');

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorkshopController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/seguimiento/{id}', [WorkshopController::class, 'publicOrderStatus'])->whereNumber('id')->middleware('signed')->name('orders.public-status');
 
@@ -14,6 +16,18 @@ Route::middleware('guest')->group(function (): void {
 Route::post('/salir', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::middleware('role:sistemas')->group(function (): void {
+        Route::get('/empresas', [CompanyController::class, 'index'])->name('companies.index');
+        Route::get('/empresas/nueva', [CompanyController::class, 'create'])->name('companies.create');
+        Route::post('/empresas', [CompanyController::class, 'store'])->name('companies.store');
+        Route::get('/empresas/{company}', [CompanyController::class, 'edit'])->whereNumber('company')->name('companies.edit');
+        Route::put('/empresas/{company}', [CompanyController::class, 'update'])->whereNumber('company')->name('companies.update');
+    });
+
+    Route::middleware(['role:usuario', 'company.active'])->group(function (): void {
     Route::get('/', [WorkshopController::class, 'dashboard'])->name('dashboard');
     Route::get('/recepcion', [WorkshopController::class, 'reception'])->name('reception');
     Route::get('/clientes/buscar-por-documento', [WorkshopController::class, 'findCustomerByDocument'])->name('customers.lookup');
@@ -46,4 +60,5 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/facturacion/{id}', [WorkshopController::class, 'updateInvoice'])->whereNumber('id')->name('billing.update');
     Route::post('/facturacion/{id}/finalizar', [WorkshopController::class, 'finalizeInvoice'])->whereNumber('id')->name('billing.finalize');
     Route::delete('/facturacion/{id}', [WorkshopController::class, 'destroyInvoice'])->whereNumber('id')->name('billing.destroy');
+    });
 });

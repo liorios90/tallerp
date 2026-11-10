@@ -7,23 +7,25 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 
 class WorkshopController extends Controller
 {
     public function dashboard(): View
     {
-        $stats = ['active' => DB::table('service_orders')->whereNotIn('status', ['Entregado', 'Cancelado'])->count(), 'today' => DB::table('service_orders')->whereDate('received_at', today())->count(), 'ready' => DB::table('service_orders')->where('status', 'Listo para entrega')->count(), 'customers' => DB::table('customers')->count()];
-        $orders = DB::table('service_orders')->join('customers','customers.id','=','service_orders.customer_id')->select('service_orders.*','customers.name as customer')->latest('received_at')->limit(7)->get();
+        $stats = ['active' => $this->companyTable('service_orders')->whereNotIn('status', ['Entregado', 'Cancelado'])->count(), 'today' => $this->companyTable('service_orders')->whereDate('received_at', today())->count(), 'ready' => $this->companyTable('service_orders')->where('status', 'Listo para entrega')->count(), 'customers' => $this->companyTable('customers')->count()];
+        $orders = $this->companyTable('service_orders')->join('customers','customers.id','=','service_orders.customer_id')->select('service_orders.*','customers.name as customer')->latest('received_at')->limit(7)->get();
         return view('workshop', compact('stats','orders'))->with('page', 'dashboard');
     }
     public function reception(): View { return view('workshop', ['page'=>'reception']); }
     public function findCustomerByDocument(Request $request): JsonResponse
     {
         $data = $request->validate(['document' => ['required', 'string', 'max:40']]);
-        $customer = DB::table('customers')
+        $customer = $this->companyTable('customers')
             ->whereRaw('LOWER(TRIM(document)) = ?', [mb_strtolower(trim($data['document']))])
             ->select('name', 'document', 'phone', 'email', 'address')
             ->first();
@@ -35,14 +37,14 @@ class WorkshopController extends Controller
     {
         $data = $request->validate(['customer_name'=>'required|string|max:160','document'=>'required|string|max:40','phone'=>'required|string|max:40','email'=>'nullable|email|max:160','address'=>'nullable|string|max:255','contact_name'=>'nullable|string|max:160','contact_phone'=>'nullable|string|max:40','device_type'=>'required|string|max:60','brand'=>'nullable|string|max:100','model'=>'nullable|string|max:100','color'=>'nullable|string|max:60','imei1'=>'nullable|string|max:40','imei2'=>'nullable|string|max:40','serial'=>'nullable|string|max:100','unlock_method'=>'nullable|string|max:255','battery_state'=>'nullable|string|max:60','powered_off'=>'nullable|boolean','observations'=>'nullable|string|max:5000','requested_work'=>'nullable|string|max:5000','checklist'=>'nullable|array','checklist.*'=>'nullable|string|max:100','accessories'=>'nullable|array','accessories.*.included'=>'nullable|boolean','accessories.*.condition'=>'nullable|string|max:100','photos'=>'nullable|array|max:8','photos.*'=>'image|max:5120']);
         $order = DB::transaction(function () use ($data,$request) {
-            $customer = DB::table('customers')->whereRaw('LOWER(TRIM(document)) = ?', [mb_strtolower(trim($data['document']))])->first();
+            $customer = $this->companyTable('customers')->whereRaw('LOWER(TRIM(document)) = ?', [mb_strtolower(trim($data['document']))])->first();
             if ($customer) {
-                DB::table('customers')->where('id', $customer->id)->update(['name'=>$data['customer_name'],'document'=>trim($data['document']),'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'updated_at'=>now()]);
+                $this->companyTable('customers')->where('id', $customer->id)->update(['name'=>$data['customer_name'],'document'=>trim($data['document']),'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'updated_at'=>now()]);
                 $customerId = $customer->id;
             } else {
-                $customerId = DB::table('customers')->insertGetId(['name'=>$data['customer_name'],'document'=>trim($data['document']),'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'created_at'=>now(),'updated_at'=>now()]);
+                $customerId = $this->companyTable('customers')->insertGetId(['company_id'=>$this->companyId(),'name'=>$data['customer_name'],'document'=>trim($data['document']),'phone'=>$data['phone'],'email'=>$data['email'] ?? null,'address'=>$data['address'] ?? null,'created_at'=>now(),'updated_at'=>now()]);
             }
-            $id = DB::table('service_orders')->insertGetId(['number'=>'OT-'.now()->format('ymd').'-'.Str::upper(Str::random(5)),'customer_id'=>$customerId,'received_by'=>auth()->id(),'contact_name'=>$data['contact_name'] ?? null,'contact_phone'=>$data['contact_phone'] ?? null,'device_type'=>$data['device_type'],'brand'=>$data['brand'] ?? null,'model'=>$data['model'] ?? null,'color'=>$data['color'] ?? null,'imei1'=>$data['imei1'] ?? null,'imei2'=>$data['imei2'] ?? null,'serial'=>$data['serial'] ?? null,'unlock_method'=>$data['unlock_method'] ?? null,'battery_state'=>$data['battery_state'] ?? null,'powered_off'=>$request->boolean('powered_off'),'observations'=>trim(($data['observations'] ?? '').($request->boolean('powered_off') ? "\nEquipo ingresó apagado; no fue posible verificar su estado ni funcionamiento al momento de la recepción." : '')),'requested_work'=>$data['requested_work'] ?? null,'status'=>'Recibido','received_at'=>now(),'created_at'=>now(),'updated_at'=>now()]);
+            $id = $this->companyTable('service_orders')->insertGetId(['company_id'=>$this->companyId(),'number'=>'OT-'.now()->format('ymd').'-'.Str::upper(Str::random(5)),'customer_id'=>$customerId,'received_by'=>auth()->id(),'contact_name'=>$data['contact_name'] ?? null,'contact_phone'=>$data['contact_phone'] ?? null,'device_type'=>$data['device_type'],'brand'=>$data['brand'] ?? null,'model'=>$data['model'] ?? null,'color'=>$data['color'] ?? null,'imei1'=>$data['imei1'] ?? null,'imei2'=>$data['imei2'] ?? null,'serial'=>$data['serial'] ?? null,'unlock_method'=>$data['unlock_method'] ?? null,'battery_state'=>$data['battery_state'] ?? null,'powered_off'=>$request->boolean('powered_off'),'observations'=>trim(($data['observations'] ?? '').($request->boolean('powered_off') ? "\nEquipo ingresó apagado; no fue posible verificar su estado ni funcionamiento al momento de la recepción." : '')),'requested_work'=>$data['requested_work'] ?? null,'status'=>'Recibido','received_at'=>now(),'created_at'=>now(),'updated_at'=>now()]);
             foreach (($data['accessories'] ?? []) as $name=>$accessory) if (!empty($accessory['included'])) DB::table('order_accessories')->insert(['service_order_id'=>$id,'name'=>$name,'condition'=>$accessory['condition'] ?? 'Bueno','created_at'=>now(),'updated_at'=>now()]);
             foreach (($data['checklist'] ?? []) as $item=>$result) if ($result) DB::table('checklist_checks')->insert(['service_order_id'=>$id,'item'=>$item,'result'=>$result,'checked_by'=>auth()->id(),'checked_at'=>now()]);
             foreach ($request->file('photos',[]) as $photo) DB::table('order_photos')->insert(['service_order_id'=>$id,'path'=>$photo->store('ordenes','public'),'created_at'=>now(),'updated_at'=>now()]);
@@ -58,7 +60,7 @@ class WorkshopController extends Controller
         $serviceTotals = DB::table('service_order_services')
             ->select('service_order_id', DB::raw('SUM(quantity * unit_price) as total'), DB::raw('COUNT(*) as line_count'))
             ->groupBy('service_order_id');
-        $orders = DB::table('service_orders')
+        $orders = $this->companyTable('service_orders')
             ->join('customers', 'customers.id', '=', 'service_orders.customer_id')
             ->leftJoinSub($itemTotals, 'item_totals', fn ($join) => $join->on('item_totals.service_order_id', '=', 'service_orders.id'))
             ->leftJoinSub($serviceTotals, 'service_totals', fn ($join) => $join->on('service_totals.service_order_id', '=', 'service_orders.id'))
@@ -79,7 +81,7 @@ class WorkshopController extends Controller
     }
     public function showOrder(int $id): View
     {
-        $order = DB::table('service_orders')
+        $order = $this->companyTable('service_orders')
             ->join('customers', 'customers.id', '=', 'service_orders.customer_id')
             ->leftJoin('users', 'users.id', '=', 'service_orders.received_by')
             ->select('service_orders.*', 'customers.name as customer', 'customers.document as customer_document', 'customers.phone as customer_phone', 'customers.email as customer_email', 'customers.address as customer_address', 'users.name as received_by_name')
@@ -101,8 +103,8 @@ class WorkshopController extends Controller
         $serviceTotal = $orderServices->sum(fn ($service): float => $service->quantity * $service->unit_price);
         $itemTotal = $usedItems->sum(fn ($item): float => $item->quantity * $item->unit_price);
         $orderChargeTotal = $itemTotal + ($orderServices->isNotEmpty() ? $serviceTotal : $order->estimated_cost);
-        $stockItems = DB::table('inventory_items')->where('quantity', '>', 0)->orderBy('name')->get();
-        $orderInvoice = DB::table('invoices')->where('service_order_id', $id)->select('id', 'number', 'status')->first();
+        $stockItems = $this->companyTable('inventory_items')->where('quantity', '>', 0)->orderBy('name')->get();
+        $orderInvoice = $this->companyTable('invoices')->where('service_order_id', $id)->select('id', 'number', 'status')->first();
         $orderHasInvoice = $orderInvoice !== null;
         $statuses = ['Recibido', 'En diagnóstico', 'Esperando aprobación', 'En reparación', 'Listo para entrega', 'Entregado', 'Cancelado'];
         $publicStatusExpiresAt = now()->addDays(30);
@@ -207,11 +209,11 @@ class WorkshopController extends Controller
             'photos.*' => ['image', 'max:5120'],
         ]);
 
-        $serviceOrder = DB::table('service_orders')->where('id', $id)->first();
+        $serviceOrder = $this->companyTable('service_orders')->where('id', $id)->first();
         abort_unless($serviceOrder, 404);
 
         DB::transaction(function () use ($data, $request, $id, $serviceOrder): void {
-            DB::table('customers')->where('id', $serviceOrder->customer_id)->update([
+            $this->companyTable('customers')->where('id', $serviceOrder->customer_id)->update([
                 'name' => $data['customer_name'],
                 'document' => $data['document'] ?? null,
                 'phone' => $data['phone'],
@@ -220,7 +222,7 @@ class WorkshopController extends Controller
                 'updated_at' => now(),
             ]);
 
-            DB::table('service_orders')->where('id', $id)->update([
+            $this->companyTable('service_orders')->where('id', $id)->update([
                 'contact_name' => $data['contact_name'] ?? null,
                 'contact_phone' => $data['contact_phone'] ?? null,
                 'device_type' => $data['device_type'],
@@ -279,10 +281,10 @@ class WorkshopController extends Controller
 
         return redirect()->route('orders.show', $id)->with('success', 'La orden se actualizó correctamente.');
     }
-    public function customers(Request $request): View { $customers=DB::table('customers')->when($request->q,fn($q)=>$q->where(fn($w)=>$w->where('name','like','%'.$request->q.'%')->orWhere('document','like','%'.$request->q.'%')->orWhere('phone','like','%'.$request->q.'%')->orWhere('email','like','%'.$request->q.'%')))->latest()->paginate(15); return view('workshop',compact('customers'))->with('page','customers'); }
+    public function customers(Request $request): View { $customers=$this->companyTable('customers')->when($request->q,fn($q)=>$q->where(fn($w)=>$w->where('name','like','%'.$request->q.'%')->orWhere('document','like','%'.$request->q.'%')->orWhere('phone','like','%'.$request->q.'%')->orWhere('email','like','%'.$request->q.'%')))->latest()->paginate(15); return view('workshop',compact('customers'))->with('page','customers'); }
     public function inventory(): View
     {
-        $items = DB::table('inventory_items')->orderBy('quantity')->orderBy('name')->get();
+        $items = $this->companyTable('inventory_items')->orderBy('quantity')->orderBy('name')->get();
 
         return view('workshop', compact('items'))->with('page', 'inventory');
     }
@@ -291,14 +293,15 @@ class WorkshopController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
-            'sku' => ['nullable', 'string', 'max:100', 'unique:inventory_items,sku'],
+            'sku' => ['nullable', 'string', 'max:100', Rule::unique('inventory_items', 'sku')->where(fn ($query) => $query->where('company_id', $this->companyId()))],
             'category' => ['nullable', 'string', 'max:100'],
             'min_quantity' => ['required', 'integer', 'min:0'],
             'unit_cost' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'sale_price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
 
-        DB::table('inventory_items')->insert([
+        $this->companyTable('inventory_items')->insert([
+            'company_id' => $this->companyId(),
             ...$data,
             'quantity' => 0,
             'created_at' => now(),
@@ -310,25 +313,25 @@ class WorkshopController extends Controller
 
     public function updateInventoryItem(Request $request, int $id): RedirectResponse
     {
-        $itemExists = DB::table('inventory_items')->where('id', $id)->exists();
+        $itemExists = $this->companyTable('inventory_items')->where('id', $id)->exists();
         abort_unless($itemExists, 404);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
-            'sku' => ['nullable', 'string', 'max:100', 'unique:inventory_items,sku,'.$id],
+            'sku' => ['nullable', 'string', 'max:100', Rule::unique('inventory_items', 'sku')->ignore($id)->where(fn ($query) => $query->where('company_id', $this->companyId()))],
             'category' => ['nullable', 'string', 'max:100'],
             'min_quantity' => ['required', 'integer', 'min:0'],
             'sale_price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
 
-        DB::table('inventory_items')->where('id', $id)->update([...$data, 'updated_at' => now()]);
+        $this->companyTable('inventory_items')->where('id', $id)->update([...$data, 'updated_at' => now()]);
 
         return redirect()->route('inventory.index')->with('success', 'Datos y precio del producto actualizados.');
     }
 
     public function purchases(): View
     {
-        $purchases = DB::table('purchases')
+        $purchases = $this->companyTable('purchases')
             ->leftJoin('users', 'users.id', '=', 'purchases.created_by')
             ->select('purchases.*', 'users.name as created_by_name')
             ->latest('purchased_at')
@@ -345,7 +348,7 @@ class WorkshopController extends Controller
 
     public function createPurchase(): View
     {
-        $items = DB::table('inventory_items')->orderBy('name')->get();
+        $items = $this->companyTable('inventory_items')->orderBy('name')->get();
         $purchase = null;
         $lines = collect();
         $editable = true;
@@ -355,7 +358,7 @@ class WorkshopController extends Controller
 
     public function showPurchase(int $id): View
     {
-        $purchase = DB::table('purchases')->where('id', $id)->first();
+        $purchase = $this->companyTable('purchases')->where('id', $id)->first();
         abort_unless($purchase, 404);
         $lines = DB::table('purchase_items')
             ->join('inventory_items', 'inventory_items.id', '=', 'purchase_items.inventory_item_id')
@@ -363,7 +366,7 @@ class WorkshopController extends Controller
             ->select('purchase_items.*', 'inventory_items.name as item_name', 'inventory_items.sku')
             ->orderBy('purchase_items.id')
             ->get();
-        $items = DB::table('inventory_items')->orderBy('name')->get();
+        $items = $this->companyTable('inventory_items')->orderBy('name')->get();
         $editable = $purchase->status === 'Borrador';
 
         return view('workshop', compact('purchase', 'lines', 'items', 'editable'))->with('page', 'purchase_form');
@@ -384,7 +387,8 @@ class WorkshopController extends Controller
         $purchaseId = DB::transaction(function () use ($data): int {
             $purchaseNumber = 'COMP-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
             $total = round(collect($data['items'])->sum(fn (array $line): float => (int) $line['quantity'] * (float) $line['unit_cost']), 2);
-            $purchaseId = DB::table('purchases')->insertGetId([
+            $purchaseId = $this->companyTable('purchases')->insertGetId([
+                'company_id' => $this->companyId(),
                 'number' => $purchaseNumber,
                 'supplier' => $data['supplier'],
                 'reference' => $data['reference'] ?? null,
@@ -405,16 +409,16 @@ class WorkshopController extends Controller
 
     public function updatePurchase(Request $request, int $id): RedirectResponse
     {
-        $purchase = DB::table('purchases')->where('id', $id)->first();
+        $purchase = $this->companyTable('purchases')->where('id', $id)->first();
         abort_unless($purchase, 404);
         abort_unless($purchase->status === 'Borrador', 403);
         $data = $this->validatePurchase($request);
 
         DB::transaction(function () use ($data, $id): void {
-            $purchase = DB::table('purchases')->where('id', $id)->lockForUpdate()->first();
+            $purchase = $this->companyTable('purchases')->where('id', $id)->lockForUpdate()->first();
             abort_unless($purchase && $purchase->status === 'Borrador', 403);
             $total = round(collect($data['items'])->sum(fn (array $line): float => (int) $line['quantity'] * (float) $line['unit_cost']), 2);
-            DB::table('purchases')->where('id', $id)->update([
+            $this->companyTable('purchases')->where('id', $id)->update([
                 'supplier' => $data['supplier'],
                 'reference' => $data['reference'] ?? null,
                 'purchased_at' => $data['purchased_at'],
@@ -431,23 +435,24 @@ class WorkshopController extends Controller
     public function finalizePurchase(int $id): RedirectResponse
     {
         DB::transaction(function () use ($id): void {
-            $purchase = DB::table('purchases')->where('id', $id)->lockForUpdate()->first();
+            $purchase = $this->companyTable('purchases')->where('id', $id)->lockForUpdate()->first();
             abort_unless($purchase, 404);
             abort_unless($purchase->status === 'Borrador', 403);
             $lines = DB::table('purchase_items')->where('purchase_id', $id)->orderBy('inventory_item_id')->get();
             $itemIds = $lines->pluck('inventory_item_id')->unique();
-            $items = DB::table('inventory_items')->whereIn('id', $itemIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            $items = $this->companyTable('inventory_items')->whereIn('id', $itemIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
             foreach ($lines as $line) {
                 $item = $items->get($line->inventory_item_id);
                 $newQuantity = (int) $item->quantity + (int) $line->quantity;
                 $weightedCost = round((((int) $item->quantity * (float) $item->unit_cost) + ((int) $line->quantity * (float) $line->unit_cost)) / $newQuantity, 2);
-                DB::table('inventory_items')->where('id', $item->id)->update([
+                $this->companyTable('inventory_items')->where('id', $item->id)->update([
                     'quantity' => $newQuantity,
                     'unit_cost' => $weightedCost,
                     'updated_at' => now(),
                 ]);
-                DB::table('inventory_movements')->insert([
+                $this->companyTable('inventory_movements')->insert([
+                    'company_id' => $this->companyId(),
                     'inventory_item_id' => $item->id,
                     'type' => 'Compra',
                     'quantity_change' => $line->quantity,
@@ -461,7 +466,7 @@ class WorkshopController extends Controller
                 $items[$item->id]->unit_cost = $weightedCost;
             }
 
-            DB::table('purchases')->where('id', $id)->update([
+            $this->companyTable('purchases')->where('id', $id)->update([
                 'status' => 'Finalizada',
                 'finalized_at' => now(),
                 'updated_at' => now(),
@@ -474,10 +479,10 @@ class WorkshopController extends Controller
     public function destroyPurchase(int $id): RedirectResponse
     {
         DB::transaction(function () use ($id): void {
-            $purchase = DB::table('purchases')->where('id', $id)->lockForUpdate()->first();
+            $purchase = $this->companyTable('purchases')->where('id', $id)->lockForUpdate()->first();
             abort_unless($purchase, 404);
             abort_unless($purchase->status === 'Borrador', 403);
-            DB::table('purchases')->where('id', $id)->delete();
+            $this->companyTable('purchases')->where('id', $id)->delete();
         });
 
         return redirect()->route('purchases.index')->with('success', 'Borrador de compra eliminado.');
@@ -518,7 +523,7 @@ class WorkshopController extends Controller
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'type' => ['nullable', 'in:Compra,Venta,Orden de servicio,Ajuste'],
         ]);
-        $movements = DB::table('inventory_movements')
+        $movements = $this->companyTable('inventory_movements')
             ->join('inventory_items', 'inventory_items.id', '=', 'inventory_movements.inventory_item_id')
             ->select('inventory_movements.*', 'inventory_items.name as item_name', 'inventory_items.sku')
             ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('inventory_movements.created_at', '>=', $from))
@@ -527,7 +532,7 @@ class WorkshopController extends Controller
             ->latest('inventory_movements.created_at')
             ->paginate(25)
             ->withQueryString();
-        $items = DB::table('inventory_items')->get();
+        $items = $this->companyTable('inventory_items')->get();
         $summary = [
             'items' => $items->count(),
             'low_stock' => $items->filter(fn ($item): bool => $item->quantity <= $item->min_quantity)->count(),
@@ -546,22 +551,22 @@ class WorkshopController extends Controller
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
         DB::transaction(function () use ($data, $id): void {
-            $order = DB::table('service_orders')->where('id', $id)->lockForUpdate()->first();
+            $order = $this->companyTable('service_orders')->where('id', $id)->lockForUpdate()->first();
             abort_unless($order, 404);
             if (in_array($order->status, ['Entregado', 'Cancelado'], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'No se pueden asignar repuestos a una orden cerrada.']);
             }
-            if (DB::table('invoices')->where('service_order_id', $id)->exists()) {
+            if ($this->companyTable('invoices')->where('service_order_id', $id)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'No se pueden modificar los repuestos de una orden facturada.']);
             }
 
-            $item = DB::table('inventory_items')->where('id', $data['inventory_item_id'])->lockForUpdate()->first();
+            $item = $this->companyTable('inventory_items')->where('id', $data['inventory_item_id'])->lockForUpdate()->first();
             if (!$item || $item->quantity < $data['quantity']) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['quantity' => 'No hay existencias suficientes para esta orden.']);
             }
 
             $quantity = (int) $data['quantity'];
-            DB::table('inventory_items')->where('id', $item->id)->update([
+            $this->companyTable('inventory_items')->where('id', $item->id)->update([
                 'quantity' => $item->quantity - $quantity,
                 'updated_at' => now(),
             ]);
@@ -574,7 +579,8 @@ class WorkshopController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            DB::table('inventory_movements')->insert([
+            $this->companyTable('inventory_movements')->insert([
+                    'company_id' => $this->companyId(),
                 'inventory_item_id' => $item->id,
                 'type' => 'Orden de servicio',
                 'quantity_change' => -$quantity,
@@ -594,14 +600,14 @@ class WorkshopController extends Controller
         $data = $request->validate(['quantity' => ['required', 'integer', 'min:1']]);
 
         DB::transaction(function () use ($data, $id, $lineId): void {
-            $order = DB::table('service_orders')->where('id', $id)->lockForUpdate()->first();
+            $order = $this->companyTable('service_orders')->where('id', $id)->lockForUpdate()->first();
             abort_unless($order, 404);
-            if (in_array($order->status, ['Entregado', 'Cancelado'], true) || DB::table('invoices')->where('service_order_id', $id)->exists()) {
+            if (in_array($order->status, ['Entregado', 'Cancelado'], true) || $this->companyTable('invoices')->where('service_order_id', $id)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['quantity' => 'No se pueden editar cargos de una orden cerrada o facturada.']);
             }
             $line = DB::table('service_order_items')->where('service_order_id', $id)->where('id', $lineId)->lockForUpdate()->first();
             abort_unless($line, 404);
-            $item = DB::table('inventory_items')->where('id', $line->inventory_item_id)->lockForUpdate()->first();
+            $item = $this->companyTable('inventory_items')->where('id', $line->inventory_item_id)->lockForUpdate()->first();
             $quantityChange = (int) $data['quantity'] - (int) $line->quantity;
 
             if ($quantityChange > 0 && $item->quantity < $quantityChange) {
@@ -609,11 +615,12 @@ class WorkshopController extends Controller
             }
 
             if ($quantityChange !== 0) {
-                DB::table('inventory_items')->where('id', $item->id)->update([
+                $this->companyTable('inventory_items')->where('id', $item->id)->update([
                     'quantity' => $item->quantity - $quantityChange,
                     'updated_at' => now(),
                 ]);
-                DB::table('inventory_movements')->insert([
+                $this->companyTable('inventory_movements')->insert([
+                    'company_id' => $this->companyId(),
                     'inventory_item_id' => $item->id,
                     'type' => $quantityChange > 0 ? 'Orden de servicio' : 'Ajuste',
                     'quantity_change' => -$quantityChange,
@@ -637,12 +644,12 @@ class WorkshopController extends Controller
     public function removeOrderItem(int $id, int $lineId): RedirectResponse
     {
         DB::transaction(function () use ($id, $lineId): void {
-            $order = DB::table('service_orders')->where('id', $id)->lockForUpdate()->first();
+            $order = $this->companyTable('service_orders')->where('id', $id)->lockForUpdate()->first();
             abort_unless($order, 404);
             if (in_array($order->status, ['Entregado', 'Cancelado'], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'No se pueden retirar cargos de una orden cerrada.']);
             }
-            if (DB::table('invoices')->where('service_order_id', $id)->exists()) {
+            if ($this->companyTable('invoices')->where('service_order_id', $id)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'No se pueden retirar cargos de una orden facturada.']);
             }
             $line = DB::table('service_order_items')->where('service_order_id', $id)->where('id', $lineId)->lockForUpdate()->first();
@@ -651,16 +658,17 @@ class WorkshopController extends Controller
                 throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'No se puede retirar un repuesto que ya fue facturado.']);
             }
 
-            $item = DB::table('inventory_items')->where('id', $line->inventory_item_id)->lockForUpdate()->first();
-            DB::table('inventory_items')->where('id', $line->inventory_item_id)->update([
+            $item = $this->companyTable('inventory_items')->where('id', $line->inventory_item_id)->lockForUpdate()->first();
+            $this->companyTable('inventory_items')->where('id', $line->inventory_item_id)->update([
                 'quantity' => $item->quantity + $line->quantity,
                 'updated_at' => now(),
             ]);
-            DB::table('inventory_movements')->insert([
+            $this->companyTable('inventory_movements')->insert([
+                    'company_id' => $this->companyId(),
                 'inventory_item_id' => $item->id,
                 'type' => 'Ajuste',
                 'quantity_change' => $line->quantity,
-                'reference' => DB::table('service_orders')->where('id', $id)->value('number'),
+                'reference' => $this->companyTable('service_orders')->where('id', $id)->value('number'),
                 'note' => 'Repuesto retirado de la orden y devuelto a existencias',
                 'created_by' => auth()->id(),
                 'created_at' => now(),
@@ -681,12 +689,12 @@ class WorkshopController extends Controller
         ]);
 
         DB::transaction(function () use ($data, $id): void {
-            $order = DB::table('service_orders')->where('id', $id)->lockForUpdate()->first();
+            $order = $this->companyTable('service_orders')->where('id', $id)->lockForUpdate()->first();
             abort_unless($order, 404);
             if (in_array($order->status, ['Entregado', 'Cancelado'], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['service' => 'No se pueden agregar servicios a una orden cerrada.']);
             }
-            if (DB::table('invoices')->where('service_order_id', $id)->exists()) {
+            if ($this->companyTable('invoices')->where('service_order_id', $id)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['service' => 'No se pueden modificar los servicios de una orden que ya tiene factura.']);
             }
 
@@ -712,14 +720,14 @@ class WorkshopController extends Controller
         ]);
 
         DB::transaction(function () use ($data, $id, $serviceId): void {
-            $order = DB::table('service_orders')->where('id', $id)->lockForUpdate()->first();
+            $order = $this->companyTable('service_orders')->where('id', $id)->lockForUpdate()->first();
             abort_unless($order, 404);
             if (in_array($order->status, ['Entregado', 'Cancelado'], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['service' => 'No se pueden editar servicios de una orden cerrada.']);
             }
             $service = DB::table('service_order_services')->where('service_order_id', $id)->where('id', $serviceId)->first();
             abort_unless($service, 404);
-            if (DB::table('invoices')->where('service_order_id', $id)->exists()) {
+            if ($this->companyTable('invoices')->where('service_order_id', $id)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['service' => 'No se pueden modificar los servicios de una orden que ya tiene factura.']);
             }
 
@@ -737,14 +745,14 @@ class WorkshopController extends Controller
     public function destroyOrderService(int $id, int $serviceId): RedirectResponse
     {
         DB::transaction(function () use ($id, $serviceId): void {
-            $order = DB::table('service_orders')->where('id', $id)->lockForUpdate()->first();
+            $order = $this->companyTable('service_orders')->where('id', $id)->lockForUpdate()->first();
             abort_unless($order, 404);
             if (in_array($order->status, ['Entregado', 'Cancelado'], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['service' => 'No se pueden quitar servicios de una orden cerrada.']);
             }
             $service = DB::table('service_order_services')->where('service_order_id', $id)->where('id', $serviceId)->first();
             abort_unless($service, 404);
-            if (DB::table('invoices')->where('service_order_id', $id)->exists()) {
+            if ($this->companyTable('invoices')->where('service_order_id', $id)->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['service' => 'No se pueden eliminar servicios de una orden que ya tiene factura.']);
             }
 
@@ -756,7 +764,7 @@ class WorkshopController extends Controller
 
     public function billing(): View
     {
-        $invoices = DB::table('invoices')
+        $invoices = $this->companyTable('invoices')
             ->leftJoin('service_orders', 'service_orders.id', '=', 'invoices.service_order_id')
             ->leftJoin('customers as order_customers', 'order_customers.id', '=', 'service_orders.customer_id')
             ->leftJoin('customers as invoice_customers', 'invoice_customers.id', '=', 'invoices.customer_id')
@@ -773,8 +781,8 @@ class WorkshopController extends Controller
         $lines = collect();
         $editable = true;
         $isServiceOrderInvoice = false;
-        $items = DB::table('inventory_items')->where('quantity', '>', 0)->orderBy('name')->get();
-        $customers = DB::table('customers')->orderBy('name')->get();
+        $items = $this->companyTable('inventory_items')->where('quantity', '>', 0)->orderBy('name')->get();
+        $customers = $this->companyTable('customers')->orderBy('name')->get();
         $uninvoicedOrders = $this->uninvoicedOrders();
         $preselectedOrderId = $request->integer('service_order_id');
 
@@ -783,7 +791,7 @@ class WorkshopController extends Controller
 
     public function showInvoice(int $id): View
     {
-        $invoice = DB::table('invoices')
+        $invoice = $this->companyTable('invoices')
             ->leftJoin('customers', 'customers.id', '=', 'invoices.customer_id')
             ->leftJoin('service_orders', 'service_orders.id', '=', 'invoices.service_order_id')
             ->select('invoices.*', 'customers.name as customer_name', 'customers.document as customer_document', 'customers.phone as customer_phone', 'customers.address as customer_address', 'service_orders.number as order_number')
@@ -793,8 +801,8 @@ class WorkshopController extends Controller
         $lines = DB::table('invoice_lines')->where('invoice_id', $id)->orderBy('id')->get();
         $editable = $invoice->status === 'Borrador';
         $isServiceOrderInvoice = $invoice->service_order_id !== null;
-        $items = DB::table('inventory_items')->orderBy('name')->get();
-        $customers = DB::table('customers')->orderBy('name')->get();
+        $items = $this->companyTable('inventory_items')->orderBy('name')->get();
+        $customers = $this->companyTable('customers')->orderBy('name')->get();
         $uninvoicedOrders = collect();
 
         return view('workshop', compact('invoice', 'lines', 'editable', 'isServiceOrderInvoice', 'items', 'customers', 'uninvoicedOrders'))->with('page', 'invoice_form');
@@ -815,8 +823,9 @@ class WorkshopController extends Controller
             $order = null;
             $customerId = $data['customer_id'] ?? null;
             if (!empty($data['service_order_id'])) {
-                $order = DB::table('service_orders')->where('id', $data['service_order_id'])->lockForUpdate()->first();
-                if (DB::table('invoices')->where('service_order_id', $order->id)->exists()) {
+                $order = $this->companyTable('service_orders')->where('id', $data['service_order_id'])->lockForUpdate()->first();
+                abort_unless($order, 404);
+                if ($this->companyTable('invoices')->where('service_order_id', $order->id)->exists()) {
                     throw \Illuminate\Validation\ValidationException::withMessages(['service_order_id' => 'Esta orden ya tiene una factura.']);
                 }
                 $customerId = $order->customer_id;
@@ -872,7 +881,7 @@ class WorkshopController extends Controller
                 }
             } else {
                 $itemIds = $saleItems->pluck('inventory_item_id');
-                $lockedItems = DB::table('inventory_items')->whereIn('id', $itemIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                $lockedItems = $this->companyTable('inventory_items')->whereIn('id', $itemIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
                 if ($lockedItems->count() !== $itemIds->unique()->count()) {
                     abort(422);
                 }
@@ -893,7 +902,12 @@ class WorkshopController extends Controller
 
             $subtotal = round(collect($invoiceLines)->sum(fn (array $line): float => $line['quantity'] * $line['unit_price']), 2);
             $tax = round($subtotal * ((float) $data['tax_rate'] / 100), 2);
-            $invoiceId = DB::table('invoices')->insertGetId([
+            if ($customerId && ! $this->companyTable('customers')->where('id', $customerId)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['customer_id' => 'Selecciona un cliente de tu empresa.']);
+            }
+
+            $invoiceId = $this->companyTable('invoices')->insertGetId([
+                'company_id' => $this->companyId(),
                 'service_order_id' => $order?->id,
                 'customer_id' => $customerId,
                 'number' => $invoiceNumber,
@@ -923,16 +937,16 @@ class WorkshopController extends Controller
 
     public function updateInvoice(Request $request, int $id): RedirectResponse
     {
-        $invoice = DB::table('invoices')->where('id', $id)->first();
+        $invoice = $this->companyTable('invoices')->where('id', $id)->first();
         abort_unless($invoice, 404);
         abort_unless($invoice->status === 'Borrador', 403);
 
         if ($invoice->service_order_id !== null) {
             $data = $request->validate(['tax_rate' => ['required', 'numeric', 'min:0', 'max:100']]);
             DB::transaction(function () use ($id, $data): void {
-                $invoice = DB::table('invoices')->where('id', $id)->lockForUpdate()->first();
+                $invoice = $this->companyTable('invoices')->where('id', $id)->lockForUpdate()->first();
                 abort_unless($invoice && $invoice->status === 'Borrador', 403);
-                DB::table('invoices')->where('id', $id)->update([
+                $this->companyTable('invoices')->where('id', $id)->update([
                     'tax_rate' => $data['tax_rate'],
                     'updated_at' => now(),
                 ]);
@@ -950,16 +964,16 @@ class WorkshopController extends Controller
             ]);
 
             DB::transaction(function () use ($data, $id): void {
-                $invoice = DB::table('invoices')->where('id', $id)->lockForUpdate()->first();
+                $invoice = $this->companyTable('invoices')->where('id', $id)->lockForUpdate()->first();
                 abort_unless($invoice && $invoice->status === 'Borrador' && $invoice->service_order_id === null, 403);
-                DB::table('invoices')->where('id', $id)->update([
+                $this->companyTable('invoices')->where('id', $id)->update([
                     'customer_id' => $data['customer_id'] ?? null,
                     'tax_rate' => $data['tax_rate'],
                     'updated_at' => now(),
                 ]);
                 DB::table('invoice_lines')->where('invoice_id', $id)->delete();
                 foreach ($data['items'] as $line) {
-                    $item = DB::table('inventory_items')->where('id', $line['inventory_item_id'])->first();
+                    $item = $this->companyTable('inventory_items')->where('id', $line['inventory_item_id'])->first();
                     DB::table('invoice_lines')->insert([
                         'invoice_id' => $id,
                         'inventory_item_id' => $item->id,
@@ -982,7 +996,7 @@ class WorkshopController extends Controller
     public function finalizeInvoice(int $id): RedirectResponse
     {
         DB::transaction(function () use ($id): void {
-            $invoice = DB::table('invoices')->where('id', $id)->lockForUpdate()->first();
+            $invoice = $this->companyTable('invoices')->where('id', $id)->lockForUpdate()->first();
             abort_unless($invoice, 404);
             abort_unless($invoice->status === 'Borrador', 403);
             $lines = DB::table('invoice_lines')->where('invoice_id', $id)->get();
@@ -990,17 +1004,18 @@ class WorkshopController extends Controller
             if ($invoice->service_order_id === null) {
                 $quantities = $lines->groupBy('inventory_item_id')->map(fn ($itemLines): int => $itemLines->sum('quantity'));
                 $itemIds = $quantities->keys()->filter()->sort()->values();
-                $items = DB::table('inventory_items')->whereIn('id', $itemIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                $items = $this->companyTable('inventory_items')->whereIn('id', $itemIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
                 foreach ($quantities as $itemId => $quantity) {
                     $item = $items->get($itemId);
                     if (!$item || $item->quantity < $quantity) {
                         throw \Illuminate\Validation\ValidationException::withMessages(['inventory' => 'No hay existencias suficientes para finalizar esta factura.']);
                     }
-                    DB::table('inventory_items')->where('id', $itemId)->update([
+                    $this->companyTable('inventory_items')->where('id', $itemId)->update([
                         'quantity' => $item->quantity - $quantity,
                         'updated_at' => now(),
                     ]);
-                    DB::table('inventory_movements')->insert([
+                    $this->companyTable('inventory_movements')->insert([
+                    'company_id' => $this->companyId(),
                         'inventory_item_id' => $itemId,
                         'type' => 'Venta',
                         'quantity_change' => -$quantity,
@@ -1014,7 +1029,7 @@ class WorkshopController extends Controller
             }
 
             $this->recalculateInvoice($id, (float) $invoice->tax_rate);
-            DB::table('invoices')->where('id', $id)->update([
+            $this->companyTable('invoices')->where('id', $id)->update([
                 'status' => 'Finalizada',
                 'issued_at' => now(),
                 'finalized_at' => now(),
@@ -1028,10 +1043,10 @@ class WorkshopController extends Controller
     public function destroyInvoice(int $id): RedirectResponse
     {
         DB::transaction(function () use ($id): void {
-            $invoice = DB::table('invoices')->where('id', $id)->lockForUpdate()->first();
+            $invoice = $this->companyTable('invoices')->where('id', $id)->lockForUpdate()->first();
             abort_unless($invoice, 404);
             abort_unless($invoice->status === 'Borrador', 403);
-            DB::table('invoices')->where('id', $id)->delete();
+            $this->companyTable('invoices')->where('id', $id)->delete();
         });
 
         return redirect()->route('billing.index')->with('success', 'Borrador de factura eliminado.');
@@ -1075,11 +1090,24 @@ class WorkshopController extends Controller
         return $digits;
     }
 
+    private function companyId(): int
+    {
+        $companyId = auth()->user()?->company_id;
+        abort_unless($companyId, 403);
+
+        return (int) $companyId;
+    }
+
+    private function companyTable(string $table): Builder
+    {
+        return DB::table($table)->where($table.'.company_id', $this->companyId());
+    }
+
     private function uninvoicedOrders(): Collection
     {
-        return DB::table('service_orders')
+        return $this->companyTable('service_orders')
             ->join('customers', 'customers.id', '=', 'service_orders.customer_id')
-            ->whereNotIn('service_orders.id', DB::table('invoices')->select('service_order_id')->whereNotNull('service_order_id'))
+            ->whereNotIn('service_orders.id', $this->companyTable('invoices')->select('service_order_id')->whereNotNull('service_order_id'))
             ->whereNotIn('service_orders.status', ['Cancelado'])
             ->select('service_orders.id', 'service_orders.number', 'customers.name as customer', 'service_orders.estimated_cost')
             ->latest('service_orders.received_at')
@@ -1090,7 +1118,7 @@ class WorkshopController extends Controller
     {
         $subtotal = (float) DB::table('invoice_lines')->where('invoice_id', $invoiceId)->sum('line_total');
         $tax = round($subtotal * ($taxRate / 100), 2);
-        DB::table('invoices')->where('id', $invoiceId)->update([
+        $this->companyTable('invoices')->where('id', $invoiceId)->update([
             'subtotal' => $subtotal,
             'tax' => $tax,
             'total' => $subtotal + $tax,
