@@ -107,8 +107,9 @@ class WorkshopController extends Controller
         $statuses = ['Recibido', 'En diagnóstico', 'Esperando aprobación', 'En reparación', 'Listo para entrega', 'Entregado', 'Cancelado'];
         $publicStatusExpiresAt = now()->addDays(30);
         $publicStatusUrl = URL::temporarySignedRoute('orders.public-status', $publicStatusExpiresAt, ['id' => $id]);
+        $whatsappUrl = $this->ownerWhatsappUrl($order, $publicStatusUrl);
 
-        return view('workshop', compact('order', 'accessories', 'checks', 'photos', 'statuses', 'publicStatusUrl', 'publicStatusExpiresAt', 'usedItems', 'stockItems', 'orderServices', 'serviceTotal', 'orderChargeTotal', 'orderHasInvoice', 'orderInvoice'))->with('page', 'order_detail');
+        return view('workshop', compact('order', 'accessories', 'checks', 'photos', 'statuses', 'publicStatusUrl', 'publicStatusExpiresAt', 'whatsappUrl', 'usedItems', 'stockItems', 'orderServices', 'serviceTotal', 'orderChargeTotal', 'orderHasInvoice', 'orderInvoice'))->with('page', 'order_detail');
     }
 
     public function publicOrderStatus(int $id): View
@@ -1025,6 +1026,44 @@ class WorkshopController extends Controller
         });
 
         return redirect()->route('billing.index')->with('success', 'Borrador de factura eliminado.');
+    }
+
+    private function ownerWhatsappUrl(object $order, string $publicStatusUrl): ?string
+    {
+        $phone = $this->whatsappPhone($order->customer_phone ?: $order->contact_phone);
+
+        if ($phone === null) {
+            return null;
+        }
+
+        $message = "Hola {$order->customer}. Puedes consultar el estado de tu orden {$order->number} en este enlace:\n\n{$publicStatusUrl}\n";
+
+        return 'https://web.whatsapp.com/send?phone='.$phone.'&text='.rawurlencode($message);
+    }
+
+    private function whatsappPhone(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone) ?? '';
+
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            $digits = '593'.substr($digits, 1);
+        } elseif (strlen($digits) === 9 && str_starts_with($digits, '9')) {
+            $digits = '593'.$digits;
+        }
+
+        if (strlen($digits) < 8 || strlen($digits) > 15) {
+            return null;
+        }
+
+        return $digits;
     }
 
     private function uninvoicedOrders(): Collection

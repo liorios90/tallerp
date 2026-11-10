@@ -37,7 +37,7 @@
 <div class="headline"><div><p class="eyebrow">Gestión del laboratorio</p><h1>Órdenes de servicio</h1><p class="sub">Consulta el estado y seguimiento de cada equipo.</p></div><a class="btn" href="{{ route('reception') }}">＋ &nbsp; Nueva recepción</a></div><div class="card"><form class="toolbar" method="get"><div class="search"><input name="q" value="{{ request('q') }}" placeholder="Buscar por orden, cliente o teléfono..."></div><button class="btn btn-light">Buscar</button></form><div class="table-wrap"><table><thead><tr><th>N.º orden</th><th>Cliente</th><th>Dispositivo</th><th>Recepción</th><th>Trabajo solicitado</th><th>Estado</th><th>A facturar</th><th></th></tr></thead><tbody>@forelse($orders as $o)<tr><td class="order-id"><a href="{{ route('orders.show', $o->id) }}">{{ $o->number }}</a></td><td class="client-name">{{ $o->customer }}<div class="muted">{{ $o->contact_phone }}</div></td><td>{{ $o->device_type }} · {{ $o->brand }} {{ $o->model }}</td><td>{{ \Carbon\Carbon::parse($o->received_at)->format('d/m/Y H:i') }}</td><td>{{ \Illuminate\Support\Str::limit($o->requested_work,32) }}</td><td><span class="badge blue">{{ $o->status }}</span></td><td><b>${{ number_format($o->billable_total,2) }}</b></td><td><a class="link" href="{{ route('orders.show', $o->id) }}">Abrir →</a></td></tr>@empty<tr><td colspan="8" class="empty">No hay órdenes registradas.</td></tr>@endforelse</tbody></table></div><div style="margin-top:16px">{{ $orders->links() }}</div></div>
 @elseif($page==='order_detail')
 <div class="headline"><div><p class="eyebrow"><a class="link" href="{{ route('orders.index') }}">Órdenes de servicio</a> / Edición de orden</p><h1>{{ $order->number }}</h1><p class="sub">Recibido el {{ \Carbon\Carbon::parse($order->received_at)->format('d/m/Y H:i') }} por {{ $order->received_by_name ?: 'Recepción' }}</p></div><a class="btn btn-light" href="{{ route('orders.index') }}">← Volver a órdenes</a></div>
-<div class="card" style="margin-bottom:14px"><div class="card-head"><div><h2 class="card-title">Enlace de consulta para el dueño</h2><span class="muted">Permite revisar el estado; no da acceso para editar.</span></div><span class="badge blue">Vence {{ $publicStatusExpiresAt->format('d/m/Y') }}</span></div><div class="toolbar"><div class="search" style="max-width:none"><input id="publicStatusUrl" value="{{ $publicStatusUrl }}" readonly aria-label="Enlace público de seguimiento"></div><button class="btn" type="button" id="copyPublicStatusUrl">Copiar enlace</button></div><span class="muted" id="copyPublicStatusFeedback">El enlace es válido durante 30 días. Genera uno nuevo desde esta ficha si vence.</span></div>
+<div class="card" style="margin-bottom:14px"><div class="card-head"><div><h2 class="card-title">Enlace de consulta para el dueño</h2><span class="muted">Permite revisar el estado; no da acceso para editar.</span></div><span class="badge blue">Vence {{ $publicStatusExpiresAt->format('d/m/Y') }}</span></div><div class="toolbar"><div class="search" style="max-width:none;min-width:0"><a id="publicStatusUrl" href="{{ $publicStatusUrl }}" target="_blank" rel="noopener" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #e3e8ef;border-radius:8px;padding:10px 11px;background:#fff;color:#315cf5;text-decoration:underline">{{ $publicStatusUrl }}</a></div><button class="btn" type="button" id="copyPublicStatusUrl">Copiar enlace</button>@if($whatsappUrl)<a class="btn" href="{{ $whatsappUrl }}" target="_blank" rel="noopener" style="background:#128c7e">Enviar por WhatsApp</a>@endif</div><span class="muted" id="copyPublicStatusFeedback">El enlace es válido durante 30 días. Genera uno nuevo desde esta ficha si vence.</span></div>
 <div>
 <form method="post" action="{{ route('orders.update', $order->id) }}" enctype="multipart/form-data">@csrf @method('PATCH')
 <div class="card"><div class="card-head"><h2 class="card-title">Editar datos del cliente</h2></div><div class="form-grid"><div class="field"><label>Nombre del cliente *</label><input name="customer_name" value="{{ old('customer_name', $order->customer) }}" required></div><div class="field"><label>Cédula o RUC</label><input name="document" value="{{ old('document', $order->customer_document) }}"></div><div class="field"><label>Teléfono *</label><input name="phone" value="{{ old('phone', $order->customer_phone) }}" required></div><div class="field"><label>Correo</label><input type="email" name="email" value="{{ old('email', $order->customer_email) }}"></div><div class="field full"><label>Dirección</label><input name="address" value="{{ old('address', $order->customer_address) }}"></div><div class="field"><label>Persona que entregó</label><input name="contact_name" value="{{ old('contact_name', $order->contact_name) }}"></div><div class="field"><label>Teléfono de contacto</label><input name="contact_phone" value="{{ old('contact_phone', $order->contact_phone) }}"></div></div></div>
@@ -149,13 +149,17 @@ receptionForm.addEventListener('submit', function (event) {
 </script>@endif
 @if($page==='order_detail')<script>
 document.getElementById('copyPublicStatusUrl').addEventListener('click', async function () {
-    const url = document.getElementById('publicStatusUrl');
+    const url = document.getElementById('publicStatusUrl').href;
     const feedback = document.getElementById('copyPublicStatusFeedback');
     try {
-        await navigator.clipboard.writeText(url.value);
+        await navigator.clipboard.writeText(url);
     } catch (error) {
-        url.select();
+        const helper = document.createElement('textarea');
+        helper.value = url;
+        document.body.appendChild(helper);
+        helper.select();
         document.execCommand('copy');
+        helper.remove();
     }
     feedback.textContent = 'Enlace copiado. Ya puedes enviarlo al dueño del equipo.';
 });
