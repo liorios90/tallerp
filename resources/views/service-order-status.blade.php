@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        *{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#15233b;font:15px 'DM Sans',sans-serif}.wrap{max-width:700px;margin:0 auto;padding:48px 20px}.brand{color:#315cf5;font:800 17px Manrope,sans-serif;margin-bottom:28px}.card{background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:26px;box-shadow:0 12px 36px #15233b0a;margin-bottom:14px}.eyebrow{color:#8290a5;text-transform:uppercase;letter-spacing:1.2px;font-size:11px;font-weight:700}h1{font:700 26px Manrope;margin:7px 0}.device{color:#68768c;margin:0 0 25px}.status{border-radius:10px;padding:16px;background:#e9efff;color:#3156c8;font-weight:700;font-size:17px}.status.ready{background:#e4f7f1;color:#138d76}.status.cancelled{background:#ffeded;color:#cc5c5d}.track{display:flex;gap:5px;margin:20px 0 8px}.track span{height:6px;border-radius:9px;background:#e8edf3;flex:1}.track span.done{background:#315cf5}.track span.ready{background:#16a895}.meta{display:grid;grid-template-columns:1fr 1fr;gap:18px;border-top:1px solid #e8edf3;margin-top:24px;padding-top:20px}.meta small{display:block;color:#8290a5;margin-bottom:5px}.foot{color:#8290a5;font-size:12px;text-align:center;margin-top:18px}.table{width:100%;border-collapse:collapse;margin-top:14px}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid #e8edf3}.table th{font-size:12px;color:#8290a5}.table tfoot th{text-align:right;color:#15233b}.invoice{margin-top:15px;padding:13px;border-radius:9px;background:#e4f7f1;color:#138d76}.muted{color:#8290a5}@media(max-width:520px){.wrap{padding:28px 14px}.card{padding:20px}.meta{grid-template-columns:1fr}}
+        *{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#15233b;font:15px 'DM Sans',sans-serif}.wrap{max-width:700px;margin:0 auto;padding:48px 20px}.brand{color:#315cf5;font:800 17px Manrope,sans-serif;margin-bottom:28px}.card{background:#fff;border:1px solid #e8edf3;border-radius:14px;padding:26px;box-shadow:0 12px 36px #15233b0a;margin-bottom:14px}.eyebrow{color:#8290a5;text-transform:uppercase;letter-spacing:1.2px;font-size:11px;font-weight:700}h1{font:700 26px Manrope;margin:7px 0}.device{color:#68768c;margin:0 0 25px}.status{border-radius:10px;padding:16px;background:#e9efff;color:#3156c8;font-weight:700;font-size:17px}.status.ready{background:#e4f7f1;color:#138d76}.status.cancelled{background:#ffeded;color:#cc5c5d}.track{display:flex;gap:5px;margin:20px 0 8px}.track span{height:6px;border-radius:9px;background:#e8edf3;flex:1}.track span.done{background:#315cf5}.track span.ready{background:#16a895}.meta{display:grid;grid-template-columns:1fr 1fr;gap:18px;border-top:1px solid #e8edf3;margin-top:24px;padding-top:20px}.meta.plain{border-top:0;margin-top:14px;padding-top:0}.meta small{display:block;color:#8290a5;margin-bottom:5px}.meta strong{overflow-wrap:anywhere}.foot{color:#8290a5;font-size:12px;text-align:center;margin-top:18px}.table{width:100%;border-collapse:collapse;margin-top:14px}.table th,.table td{text-align:left;padding:11px 8px;border-bottom:1px solid #e8edf3}.table th{font-size:12px;color:#8290a5}.table tfoot th{text-align:right;color:#15233b}.invoice{margin-top:15px;padding:13px;border-radius:9px;background:#e4f7f1;color:#138d76}.muted{color:#8290a5}@media(max-width:520px){.wrap{padding:28px 14px}.card{padding:20px}.meta{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
@@ -34,6 +34,18 @@
         <div class="meta">
             <div><small>Fecha de recepción</small><strong>{{ \Carbon\Carbon::parse($order->received_at)->format('d/m/Y') }}</strong></div>
             <div><small>Última actualización</small><strong>{{ \Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i') }}</strong></div>
+        </div>
+    </section>
+    <section class="card">
+        <p class="eyebrow">Datos del cliente</p>
+        <div class="meta plain">
+            <div><small>Nombre</small><strong>{{ $order->customer_name }}</strong></div>
+            <div><small>Cédula o RUC</small><strong>{{ $order->customer_document ?: '—' }}</strong></div>
+            <div><small>Teléfono</small><strong>{{ $order->customer_phone ?: '—' }}</strong></div>
+            <div><small>Correo</small><strong>{{ $order->customer_email ?: '—' }}</strong></div>
+            <div><small>Dirección</small><strong>{{ $order->customer_address ?: '—' }}</strong></div>
+            <div><small>Persona que entregó</small><strong>{{ $order->contact_name ?: '—' }}</strong></div>
+            <div><small>Teléfono de contacto</small><strong>{{ $order->contact_phone ?: '—' }}</strong></div>
         </div>
     </section>
     <section class="card">

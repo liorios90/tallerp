@@ -114,7 +114,23 @@ class WorkshopController extends Controller
     public function publicOrderStatus(int $id): View
     {
         $order = DB::table('service_orders')
-            ->select('service_orders.number', 'service_orders.device_type', 'service_orders.brand', 'service_orders.model', 'service_orders.status', 'service_orders.received_at', 'service_orders.updated_at')
+            ->join('customers', 'customers.id', '=', 'service_orders.customer_id')
+            ->select(
+                'service_orders.number',
+                'service_orders.device_type',
+                'service_orders.brand',
+                'service_orders.model',
+                'service_orders.status',
+                'service_orders.received_at',
+                'service_orders.updated_at',
+                'service_orders.contact_name',
+                'service_orders.contact_phone',
+                'customers.name as customer_name',
+                'customers.document as customer_document',
+                'customers.phone as customer_phone',
+                'customers.email as customer_email',
+                'customers.address as customer_address',
+            )
             ->where('service_orders.id', $id)
             ->first();
 
