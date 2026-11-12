@@ -184,7 +184,24 @@ class WorkshopController extends Controller
         abort_unless($record !== null, 404);
         abort_unless(Storage::disk('public')->exists($record->path), 404);
 
-        return Storage::disk('public')->response($record->path);
+        $mime = Storage::disk('public')->mimeType($record->path);
+        if (! is_string($mime) || ! str_starts_with($mime, 'image/')) {
+            $mime = match (strtolower(pathinfo($record->path, PATHINFO_EXTENSION))) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                'bmp' => 'image/bmp',
+                default => null,
+            };
+        }
+        abort_unless(is_string($mime), 404);
+
+        return Storage::disk('public')->response($record->path, null, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function updateOrder(Request $request, int $id): RedirectResponse
