@@ -10,9 +10,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WorkshopController extends Controller
 {
@@ -120,6 +122,7 @@ class WorkshopController extends Controller
         $order = DB::table('service_orders')
             ->join('customers', 'customers.id', '=', 'service_orders.customer_id')
             ->select(
+                'service_orders.id',
                 'service_orders.number',
                 'service_orders.device_type',
                 'service_orders.brand',
@@ -173,6 +176,15 @@ class WorkshopController extends Controller
         $invoice = DB::table('invoices')->where('service_order_id', $id)->select('number', 'status', 'total')->first();
 
         return view('service-order-status', compact('order', 'photos', 'chargeLines', 'chargeTotal', 'invoice'));
+    }
+
+    public function publicOrderPhoto(int $id, int $photo): StreamedResponse
+    {
+        $record = DB::table('order_photos')->where('id', $photo)->where('service_order_id', $id)->first();
+        abort_unless($record !== null, 404);
+        abort_unless(Storage::disk('public')->exists($record->path), 404);
+
+        return Storage::disk('public')->response($record->path);
     }
 
     public function updateOrder(Request $request, int $id): RedirectResponse

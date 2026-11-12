@@ -66,7 +66,8 @@
         @if($photos->isNotEmpty())
             <div class="photos">
                 @foreach($photos as $photo)
-                    <a href="{{ asset('storage/'.$photo->path) }}" target="_blank" rel="noopener"><img src="{{ asset('storage/'.$photo->path) }}" alt="Fotografía de {{ $order->number }}"></a>
+                    @php($photoUrl = URL::temporarySignedRoute('orders.public-photo', now()->addDays(30), ['id' => $order->id, 'photo' => $photo->id]))
+                    <a href="{{ $photoUrl }}" target="_blank" rel="noopener"><img src="{{ $photoUrl }}" alt="Fotografía de {{ $order->number }}"></a>
                 @endforeach
             </div>
         @endif

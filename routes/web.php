@@ -7,6 +7,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 
 Route::get('/seguimiento/{id}', [WorkshopController::class, 'publicOrderStatus'])->whereNumber('id')->middleware('signed')->name('orders.public-status');
+Route::get('/seguimiento/{id}/fotos/{photo}', [WorkshopController::class, 'publicOrderPhoto'])->whereNumber('id')->whereNumber('photo')->middleware('signed')->name('orders.public-photo');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/ingresar', [AuthController::class, 'create'])->name('login');
