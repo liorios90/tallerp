@@ -66,7 +66,9 @@
         @if($photos->isNotEmpty())
             <div class="photos">
                 @foreach($photos as $photo)
-                    <img src="{{ URL::temporarySignedRoute('orders.public-photo', now()->addDays(30), ['id' => $order->id, 'photo' => $photo->id]) }}" alt="Fotografía de {{ $order->number }}">
+                    @if($photo->inline_src)
+                        <img src="{{ $photo->inline_src }}" alt="Fotografía de {{ $order->number }}">
+                    @endif
                 @endforeach
             </div>
         @endif

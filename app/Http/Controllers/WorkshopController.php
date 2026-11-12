@@ -95,7 +95,7 @@ class WorkshopController extends Controller
 
         $accessories = DB::table('order_accessories')->where('service_order_id', $id)->orderBy('id')->get();
         $checks = DB::table('checklist_checks')->where('service_order_id', $id)->orderBy('id')->get();
-        $photos = DB::table('order_photos')->where('service_order_id', $id)->orderBy('id')->get();
+        $photos = $this->photosForOrder($id);
         $usedItems = DB::table('service_order_items')
             ->join('inventory_items', 'inventory_items.id', '=', 'service_order_items.inventory_item_id')
             ->where('service_order_items.service_order_id', $id)
@@ -151,7 +151,7 @@ class WorkshopController extends Controller
 
         abort_unless($order !== null, 404);
 
-        $photos = DB::table('order_photos')->where('service_order_id', $id)->orderBy('id')->get();
+        $photos = $this->photosForOrder($id);
         $chargeLines = DB::table('service_order_items')
             ->join('inventory_items', 'inventory_items.id', '=', 'service_order_items.inventory_item_id')
             ->where('service_order_items.service_order_id', $id)
@@ -176,6 +176,43 @@ class WorkshopController extends Controller
         $invoice = DB::table('invoices')->where('service_order_id', $id)->select('number', 'status', 'total')->first();
 
         return view('service-order-status', compact('order', 'photos', 'chargeLines', 'chargeTotal', 'invoice'));
+    }
+
+    /**
+     * @return Collection<int, object>
+     */
+    private function photosForOrder(int $orderId): Collection
+    {
+        return DB::table('order_photos')->where('service_order_id', $orderId)->orderBy('id')->get()->map(function (object $photo): object {
+            $photo->inline_src = $this->inlinePhotoSource($photo->path);
+
+            return $photo;
+        });
+    }
+
+    private function inlinePhotoSource(string $path): ?string
+    {
+        $disk = Storage::disk('public');
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $mime = $disk->mimeType($path);
+        if (! is_string($mime) || ! str_starts_with($mime, 'image/')) {
+            $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                'bmp' => 'image/bmp',
+                default => null,
+            };
+        }
+        if (! is_string($mime)) {
+            return null;
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode((string) $disk->get($path));
     }
 
     public function publicOrderPhoto(int $id, int $photo): StreamedResponse
