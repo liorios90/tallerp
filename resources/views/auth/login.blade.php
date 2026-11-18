@@ -24,6 +24,7 @@
             <label class="remember"><input type="checkbox" name="remember" value="1"> Mantener sesión iniciada</label>
             <button class="button" type="submit">Ingresar</button>
         </form>
+        <a href="{{ route('register') }}" style="display:block;text-align:center;margin-top:16px;color:#315cf5;font-size:13px;font-weight:600">Registrarse</a>
     </main>
 </body>
 </html>

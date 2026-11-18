@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'workshop' => [
+        'whatsapp' => env('WORKSHOP_WHATSAPP'),
+    ],
+
 ];

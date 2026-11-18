@@ -4,14 +4,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorkshopController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegisterController;
 
 Route::get('/seguimiento/{id}', [WorkshopController::class, 'publicOrderStatus'])->whereNumber('id')->middleware('signed')->name('orders.public-status');
 Route::get('/seguimiento/{id}/fotos/{photo}', [WorkshopController::class, 'publicOrderPhoto'])->whereNumber('id')->whereNumber('photo')->middleware('signed')->name('orders.public-photo');
 
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+
 Route::middleware('guest')->group(function (): void {
     Route::get('/ingresar', [AuthController::class, 'create'])->name('login');
     Route::post('/ingresar', [AuthController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
+    Route::get('/registro', [RegisterController::class, 'create'])->name('register');
+    Route::post('/registro', [RegisterController::class, 'store'])->middleware('throttle:5,1')->name('register.store');
 });
 
 Route::post('/salir', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
@@ -29,7 +35,7 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::middleware(['role:usuario', 'company.active'])->group(function (): void {
-    Route::get('/', [WorkshopController::class, 'dashboard'])->name('dashboard');
+    Route::get('/panel', [WorkshopController::class, 'dashboard'])->name('dashboard');
     Route::get('/recepcion', [WorkshopController::class, 'reception'])->name('reception');
     Route::get('/clientes/buscar-por-documento', [WorkshopController::class, 'findCustomerByDocument'])->name('customers.lookup');
     Route::post('/ordenes', [WorkshopController::class, 'store'])->name('orders.store');
