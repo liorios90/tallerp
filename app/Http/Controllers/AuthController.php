@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\CompanyAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -34,14 +35,20 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
-        if ($user->role === 'usuario' && ! $this->companyIsActive($user->company_id)) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+        if ($user->role === 'usuario') {
+            $company = $user->company_id
+                ? DB::table('companies')->where('id', $user->company_id)->first()
+                : null;
+            $denial = CompanyAccess::denialMessage($company);
+            if ($denial !== null) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors([
-                'email' => 'Tu empresa está inactiva. No puedes ingresar.',
-            ])->onlyInput('email');
+                return redirect()->route('login')->withErrors([
+                    'email' => $denial,
+                ])->onlyInput('email');
+            }
         }
 
         $request->session()->regenerate();
@@ -52,15 +59,6 @@ class AuthController extends Controller
     private function homeRoute(): string
     {
         return Auth::user()?->role === 'sistemas' ? 'companies.index' : 'dashboard';
-    }
-
-    private function companyIsActive(mixed $companyId): bool
-    {
-        if (! $companyId) {
-            return false;
-        }
-
-        return (int) DB::table('companies')->where('id', $companyId)->value('active') === 1;
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -90,11 +90,22 @@ class CompanyController extends Controller
             'email' => ['required', 'email', 'max:160', Rule::unique('users', 'email')->ignore($userId)],
             'address' => ['nullable', 'string', 'max:255'],
             'active' => ['nullable', 'boolean'],
+            'type' => ['required', Rule::in(['normal', 'demostracion'])],
+            'demo_days' => ['nullable', 'integer', 'min:1', 'max:3650', Rule::requiredIf($request->input('type') === 'demostracion')],
+            'registered_at' => ['required', 'date'],
+            'starts_at' => ['required', 'date'],
             'password' => $passwordRules,
+        ], [
+            'type.required' => 'Selecciona si la empresa es normal o de demostración.',
+            'demo_days.required' => 'Indica cuántos días dura la demostración.',
+            'demo_days.min' => 'La demostración debe durar al menos un día.',
+            'registered_at.required' => 'Indica la fecha de registro.',
+            'starts_at.required' => 'Indica la fecha en que comienza el funcionamiento.',
         ]);
 
         $data['email'] = mb_strtolower(trim($data['email']));
         $data['active'] = $request->boolean('active');
+        $data['demo_days'] = $data['type'] === 'demostracion' ? (int) $data['demo_days'] : ($data['demo_days'] ?? null);
 
         return $data;
     }
@@ -114,6 +125,10 @@ class CompanyController extends Controller
             'email' => $data['email'],
             'address' => $data['address'] ?? null,
             'active' => $data['active'],
+            'type' => $data['type'],
+            'demo_days' => $data['type'] === 'demostracion' ? $data['demo_days'] : null,
+            'registered_at' => $data['registered_at'],
+            'starts_at' => $data['starts_at'],
             'updated_at' => now(),
         ];
 
